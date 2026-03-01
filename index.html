@@ -314,11 +314,15 @@ body{font-family:'Poppins',sans-serif;background:#f0f4f0;min-height:100vh;overfl
         <button class="auth-back" onclick="custAuthMode('signin')">← Back to Sign In</button>
         <div class="verif-box" style="margin:8px 0 14px;">
           <span class="verif-ico">📧</span>
-          <div style="font-weight:700;font-size:16px;color:#1a1a1a;">Check your inbox!</div>
-          <div id="verifEmailLabel" style="font-size:13px;color:#1e6b1e;font-weight:600;margin-top:6px;"></div>
-          <div style="font-size:12px;color:#888;margin-top:6px;line-height:1.6;">
-            We sent a verification link.<br>
-            Open it in your email app, then tap below.
+          <div style="font-weight:700;font-size:16px;color:#1a1a1a;">Verify your email</div>
+          <div id="verifEmailLabel" style="font-size:13px;color:#1e6b1e;font-weight:700;margin-top:6px;word-break:break-all;"></div>
+          <div style="font-size:12px;color:#555;margin-top:10px;line-height:1.9;text-align:left;background:#fffde7;border-radius:10px;padding:10px 12px;">
+            <b>Steps to verify:</b><br>
+            1️⃣ Open your email app (Gmail etc.)<br>
+            2️⃣ If not in inbox — <b style="color:#e65100;">check Spam/Junk folder</b><br>
+            3️⃣ Look for email from <b>noreply@ojo-foods</b><br>
+            4️⃣ Open it and click <b>"Verify Email"</b><br>
+            5️⃣ Come back here and tap below ↓
           </div>
         </div>
         <div class="lerr" id="verifErr" style="margin-bottom:8px;"></div>
@@ -389,15 +393,25 @@ body{font-family:'Poppins',sans-serif;background:#f0f4f0;min-height:100vh;overfl
 <div id="custPage" class="pg">
   <div class="hdr">
     <div class="hdr-l">
-      <span>🥦</span>
+      <span style="font-size:28px;">🥦</span>
       <div>
-        <div class="hname" style="font-size:18px;line-height:1;">OJO FOODS</div>
-        <div id="custNameTag" style="font-size:11px;opacity:.8;font-weight:600;margin-top:1px;"></div>
+        <div class="hname" style="font-size:17px;line-height:1.1;">OJO FOODS</div>
+        <div id="custNameTag" style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.92);margin-top:2px;letter-spacing:0.2px;"></div>
       </div>
     </div>
     <button class="lout" onclick="logout()">Logout</button>
   </div>
   <div class="con" id="ccon" style="padding-bottom:4px;"></div>
+  <!-- Customer care bar -->
+  <div style="background:#fff;border-top:1px solid #eee;padding:8px 16px;display:flex;align-items:center;justify-content:center;gap:10px;">
+    <span style="font-size:12px;color:#888;font-weight:600;">Need help?</span>
+    <a href="tel:7894492820" style="display:inline-flex;align-items:center;gap:6px;background:var(--g);color:#fff;padding:7px 16px;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none;">
+      📞 Call 7894492820
+    </a>
+    <a href="https://wa.me/917894492820" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#25d366;color:#fff;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none;">
+      💬 WhatsApp
+    </a>
+  </div>
   <div class="bnav">
     <button class="nbtn on" id="ct1" onclick="cTab('shop')"><span class="ni">🏪</span>Shop</button>
     <button class="nbtn" id="ct2" onclick="cTab('cart')"><span class="ni">🛒</span>Cart<span class="cbadge" id="cbadge"></span></button>
@@ -442,13 +456,32 @@ body{font-family:'Poppins',sans-serif;background:#f0f4f0;min-height:100vh;overfl
 
 <!-- CHECKOUT MODAL -->
 <div class="ov" id="ckMo">
-  <div class="mo">
+  <div class="mo" style="padding-bottom:30px;">
     <h3>Checkout 🛒</h3>
     <div id="ckItems" style="background:#f9f9f9;border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;color:#555;line-height:1.9;"></div>
-    <input class="mi" id="ckN" placeholder="Your Name">
-    <input class="mi" id="ckP" type="tel" placeholder="Phone Number *">
-    <input class="mi" id="ckA" placeholder="Delivery Address">
-    <button class="msv" style="padding:15px;font-size:16px;" onclick="placeOrder()">🎉 Place Order</button>
+
+    <input class="mi" id="ckN" placeholder="👤 Full Name *">
+    <input class="mi" id="ckP" type="tel" placeholder="📞 Phone Number *" inputmode="numeric">
+
+    <div style="font-size:12px;font-weight:700;color:#555;margin:4px 0 6px;">📍 Delivery Address</div>
+    <input class="mi" id="ckHouse" placeholder="House No / Flat / Building *">
+    <input class="mi" id="ckLane"  placeholder="Street / Lane / Road *">
+    <input class="mi" id="ckLandmark" placeholder="Landmark (near temple, school etc.)">
+    <input class="mi" id="ckArea"  placeholder="Area / Colony / Village *">
+    <input class="mi" id="ckA"    placeholder="Full Address (auto-filled)" style="color:#888;font-size:13px;" readonly>
+
+    <!-- Location share button -->
+    <div style="margin:8px 0 12px;">
+      <button onclick="shareLocation()" id="locBtn"
+        style="width:100%;padding:11px;background:#e3f2fd;border:2px solid #90caf9;border-radius:12px;
+               color:#1565c0;font-weight:700;font-size:13px;cursor:pointer;font-family:Poppins,sans-serif;
+               display:flex;align-items:center;justify-content:center;gap:8px;">
+        📍 Share My Current Location (opens Google Maps link)
+      </button>
+      <div id="locStatus" style="font-size:11px;color:#888;text-align:center;margin-top:4px;"></div>
+    </div>
+
+    <button class="msv" style="padding:15px;font-size:16px;" onclick="placeOrder()">🎉 Place Order & Pay</button>
     <button class="mcl" onclick="closeM('ckMo')">Cancel</button>
   </div>
 </div>
@@ -713,7 +746,8 @@ async function custRegister(){
     const cred = await FB.createUserWithEmailAndPassword(FB.auth, email, pass);
     pendingUser = cred.user;
     await FB.updateProfile(pendingUser,{ displayName: name+'|'+phone });
-    await FB.sendEmailVerification(pendingUser);
+    const actionSettings = { url: 'https://jyotiranjan1340.github.io/ojo-foods/', handleCodeInApp: false };
+    await FB.sendEmailVerification(pendingUser, actionSettings);
     document.getElementById('verifEmailLabel').textContent = email;
     custAuthMode('verify');
     toast('📧 Verification email sent to '+email);
@@ -756,7 +790,11 @@ async function checkVerified(){
 async function resendVerif(){
   try {
     const user = FB.auth.currentUser || pendingUser;
-    if(user){ await FB.sendEmailVerification(user); toast('📧 Verification email resent! Check your inbox.'); }
+    if(user){
+      const actionSettings = { url: 'https://jyotiranjan1340.github.io/ojo-foods/', handleCodeInApp: false };
+      await FB.sendEmailVerification(user, actionSettings);
+      toast('📧 Verification email resent! Check inbox & spam folder.');
+    }
     else showErr('verifErr','Session expired. Please go back and register again.');
   } catch(e){ toast('Error: '+e.message); }
 }
@@ -791,7 +829,7 @@ async function custSignIn(){
       document.getElementById('verifEmailLabel').textContent = email;
       try{ await FB.sendEmailVerification(user); }catch(_){}
       custAuthMode('verify');
-      showErr('verifErr','Please verify your email first. We just resent the link — check your inbox.');
+      showErr('verifErr','⚠️ Please verify your email first. Check your inbox AND spam/junk folder for the link from noreply@ojo-foods.');
       btn.disabled = false; btn.textContent = 'Sign In →';
       return;
     }
@@ -899,21 +937,26 @@ function logout(){
   document.getElementById('lerr').style.display='none';
 }
 
+function updateGreeting(){
+  const tag = document.getElementById('custNameTag');
+  if(!tag) return;
+  const nm = (currentUser?.displayName||'').split('|')[0]||'';
+  if(nm){
+    const hr = new Date().getHours();
+    const greet = hr<12 ? 'Good Morning ☀️' : hr<17 ? 'Good Afternoon 🌤️' : 'Good Evening 🌙';
+    tag.textContent = greet + ', ' + nm + ' 👋';
+  } else {
+    tag.textContent = '';
+  }
+}
+
 function showPg(id){
   document.getElementById('authPage').classList.remove('on');
   document.getElementById('loginPage').style.display='none';
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   document.getElementById(id).classList.add('on');
   if(id==='custPage'){
-    const tag=document.getElementById('custNameTag');
-    if(tag){
-      const nm=(currentUser?.displayName||'').split('|')[0]||'';
-      if(nm){
-        const hr=new Date().getHours();
-        const greet=hr<12?'Good Morning ☀️':hr<17?'Good Afternoon 🌤️':'Good Evening 🌙';
-        tag.textContent=greet+', '+nm;
-      } else { tag.textContent=''; }
-    }
+    updateGreeting();
   }
   if(id==='adminPage'){
     const chip=document.getElementById('syncChip');
@@ -1060,35 +1103,136 @@ function renderProds(){
   c.innerHTML=h+'</div>';
 }
 
+let _ordFilter = 'All';
+
 function renderOrds(){
-  const c=document.getElementById('acon');
-  if(!orders.length){ c.innerHTML=`<div class="empty"><span class="big">📦</span><p>No orders yet</p></div>`; return; }
-  c.innerHTML=`<div class="stitle">All Orders (${orders.length})</div>`+ordList(orders);
+  const con=document.getElementById('acon');
+  const tabs=['All','Pending','Confirmed','Out for Delivery','Delivered','Cancelled'];
+  const colors={
+    'All':        {bg:'#eeeeee',fg:'#555',act:'#333'},
+    'Pending':    {bg:'#e3f2fd',fg:'#1565c0',act:'#1565c0'},
+    'Confirmed':  {bg:'#e8f5e9',fg:'#2d8a2d',act:'#2d8a2d'},
+    'Out for Delivery':{bg:'#fff8e1',fg:'#f57f17',act:'#f57f17'},
+    'Delivered':  {bg:'#e8f5e9',fg:'#1b5e20',act:'#1b5e20'},
+    'Cancelled':  {bg:'#ffebee',fg:'#c62828',act:'#c62828'},
+  };
+  const counts={};
+  tabs.forEach(t=>{ counts[t]=t==='All'?orders.length:orders.filter(o=>(o.status||'').startsWith(t==='Pending'?'Pending':t)).length; });
+
+  let h=`<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:14px;scrollbar-width:none;">`;
+  tabs.forEach(t=>{
+    const col=colors[t];
+    const isOn=_ordFilter===t;
+    h+=`<button onclick="setOrdFilter('${t}')"
+      style="flex-shrink:0;padding:7px 14px;border-radius:20px;border:2px solid ${isOn?col.act:'#ddd'};
+             background:${isOn?col.act:'#fff'};color:${isOn?'#fff':col.fg};
+             font-weight:700;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;white-space:nowrap;">
+      ${t} <span style="background:${isOn?'rgba(255,255,255,0.3)':'#eee'};color:${isOn?'#fff':col.act};
+        padding:1px 7px;border-radius:20px;font-size:11px;margin-left:2px;">${counts[t]}</span>
+    </button>`;
+  });
+  h+=`</div>`;
+
+  const filtered = _ordFilter==='All' ? orders
+    : orders.filter(o=>{
+        const st=o.status||'';
+        return _ordFilter==='Pending' ? st.startsWith('Pending') : st===_ordFilter;
+      });
+
+  if(!filtered.length){
+    h+=`<div class="empty"><span class="big">📭</span><p>No ${_ordFilter} orders</p></div>`;
+  } else {
+    h+=`<div style="font-size:12px;color:#aaa;margin-bottom:10px;">${filtered.length} order${filtered.length>1?'s':''}</div>`;
+    h+=ordList(filtered);
+  }
+  con.innerHTML=h;
 }
+
+function setOrdFilter(f){ _ordFilter=f; renderOrds(); }
 
 function ordList(list){
   return list.map(o=>{
     const s=sColor(o.status);
-    return `<div class="oc">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+    return `<div class="oc" style="border-left:5px solid ${s.fg};margin-bottom:14px;">
+
+      <!-- Top: order number + status chip -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <div>
           <div style="font-weight:700;font-size:15px;color:var(--g);">Order #${String(o.id).slice(-4)}</div>
-          <div style="font-size:13px;color:#666;margin-top:2px;">👤 ${o.cname}</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
-            <span style="font-size:13px;color:#666;">📞 ${o.cphone}</span>
-            <a href="tel:${o.cphone}" style="background:#e8f5e9;color:var(--g);border:none;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">📲 Call</a>
-            <a href="https://wa.me/91${o.cphone.replace(/[^0-9]/g,'')}" target="_blank" style="background:#dcfce7;color:#16a34a;border:none;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">💬 WhatsApp</a>
-          </div>
-          <div style="font-size:11px;color:#bbb;margin-top:3px;">⏰ ${o.time} ${o.paymentStatus?'&nbsp;·&nbsp;<span style=\'color:#1e6b1e;font-weight:700;\'>💰 '+o.paymentStatus+'</span>':''}</div>
+          <div style="font-size:11px;color:#aaa;margin-top:1px;">⏰ ${o.time}</div>
         </div>
-        <span class="schip" style="background:${s.bg};color:${s.fg};">${o.status}</span>
+        <span class="schip" style="background:${s.bg};color:${s.fg};border:1.5px solid ${s.fg};">${o.status}</span>
       </div>
-      <div style="background:#f9f9f9;border-radius:10px;padding:10px;margin-bottom:10px;">
-        ${o.items.map(i=>`<div style="display:flex;justify-content:space-between;font-size:13px;color:#555;padding:2px 0;"><span>${i.emoji} ${i.name} × ${i.qty}${i.unit}</span><span>₹${Math.round(i.price*i.qty)}</span></div>`).join('')}
-        <div style="border-top:1px solid #eee;margin-top:6px;padding-top:6px;display:flex;justify-content:space-between;font-weight:700;color:var(--g);"><span>Total</span><span>₹${Math.round(o.total)}</span></div>
+
+      <!-- Customer block -->
+      <div style="background:#f5f5f5;border-radius:10px;padding:10px;margin-bottom:8px;">
+        <div style="font-weight:700;font-size:14px;color:#1a1a1a;margin-bottom:6px;">👤 ${o.cname}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;">
+          <span style="font-size:13px;color:#555;font-weight:600;">📞 ${o.cphone}</span>
+          <a href="tel:${o.cphone}" style="background:#e8f5e9;color:var(--g);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;text-decoration:none;">📲 Call</a>
+          <a href="https://wa.me/91${o.cphone.replace(/[^0-9]/g,'')}" target="_blank" style="background:#dcfce7;color:#16a34a;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;text-decoration:none;">💬 WhatsApp</a>
+        </div>
+
+        <!-- Delivery address -->
+        <div style="border-top:1px solid #eee;padding-top:8px;">
+          <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:4px;">📍 Delivery Address</div>
+          <div style="font-size:12px;color:#555;line-height:1.9;">
+            ${o.house    ? `<div>🏠 <b>House:</b> ${o.house}</div>` : ''}
+            ${o.lane     ? `<div>🛣️ <b>Street:</b> ${o.lane}</div>` : ''}
+            ${o.landmark ? `<div>🗺️ <b>Near:</b> ${o.landmark}</div>` : ''}
+            ${o.area     ? `<div>📌 <b>Area:</b> ${o.area}</div>` : ''}
+            ${!o.house && o.address ? `<div>${o.address}</div>` : ''}
+            ${!o.house && !o.address ? `<div style="color:#bbb;font-style:italic;">No address provided</div>` : ''}
+          </div>
+          ${o.locationUrl ? `
+          <a href="${o.locationUrl}" target="_blank"
+            style="display:inline-flex;align-items:center;gap:6px;background:#1a73e8;color:#fff;
+                   padding:7px 14px;border-radius:10px;font-size:12px;font-weight:700;
+                   text-decoration:none;margin-top:8px;">
+            🗺️ Open in Google Maps
+          </a>` : '<div style="font-size:11px;color:#bbb;margin-top:4px;">📍 No live location shared</div>'}
+        </div>
       </div>
+
+      <!-- Items block -->
+      <div style="background:#fafafa;border-radius:10px;padding:10px;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:6px;">🛒 Items</div>
+        ${o.items.map(i=>`
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:#555;padding:2px 0;">
+            <span>${i.emoji} ${i.name} × ${i.qty}${i.unit}</span>
+            <span style="font-weight:600;">₹${Math.round(i.price*i.qty)}</span>
+          </div>`).join('')}
+        <div style="border-top:1px solid #eee;margin-top:6px;padding-top:6px;">
+          ${(o.deliveryCharge||0)>0
+            ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:#e53e3e;margin-bottom:2px;"><span>Delivery</span><span>+₹${o.deliveryCharge}</span></div>`
+            : `<div style="font-size:11px;color:var(--g);margin-bottom:2px;">✅ Free Delivery</div>`}
+          ${(o.discount||0)>0
+            ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:#1e6b1e;margin-bottom:2px;"><span>🎉 Discount (${o.discountPct}%)</span><span>−₹${o.discount}</span></div>`
+            : ''}
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;color:var(--g);padding-top:4px;border-top:1px dashed #eee;">
+            <span>Total</span><span>₹${Math.round(o.total)}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment + ETA row -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        ${o.paymentStatus
+          ? `<div style="background:#e8f5e9;border-radius:8px;padding:5px 10px;font-size:11px;color:#1e6b1e;font-weight:700;">💰 ${o.paymentStatus}</div>`
+          : `<div style="background:#fff3e0;border-radius:8px;padding:5px 10px;font-size:11px;color:#e65100;font-weight:700;">⚠️ Payment Pending</div>`}
+        ${o.expectedDelivery
+          ? `<div style="background:#e3f2fd;border-radius:8px;padding:5px 10px;font-size:11px;color:#1565c0;font-weight:700;">🕗 ${o.expectedDelivery}</div>`
+          : ''}
+      </div>
+
+      <!-- Status action buttons -->
       <div class="strow">
-        ${['Confirmed','Out for Delivery','Delivered','Cancelled'].map(s=>`<button class="stbtn" style="background:${o.status===s?'var(--g)':'#eee'};color:${o.status===s?'#fff':'#555'};" onclick="updStatus('${o._key||o.id}','${s}')">${s}</button>`).join('')}
+        ${[['Confirmed','#2d8a2d'],['Out for Delivery','#f57f17'],['Delivered','#1b5e20'],['Cancelled','#c62828']].map(([st,col])=>
+          `<button class="stbtn"
+            style="background:${o.status===st?col:'#eee'};color:${o.status===st?'#fff':'#555'};
+                   border:1.5px solid ${o.status===st?col:'#ddd'};"
+            onclick="updStatus('${o._key||o.id}','${st}')">${st}</button>`
+        ).join('')}
       </div>
     </div>`;
   }).join('');
@@ -1178,7 +1322,7 @@ function cTab(t){
   ['shop','cart','orders'].forEach((n,i)=>document.getElementById(`ct${i+1}`).classList.toggle('on',n===t));
   renderCust();
 }
-function renderCust(){ ctab==='shop'?renderShop():ctab==='cart'?renderCart():renderMyOrds(); updCartBadge(); }
+function renderCust(){ updateGreeting(); ctab==='shop'?renderShop():ctab==='cart'?renderCart():renderMyOrds(); updCartBadge(); }
 
 function renderShop(){
   const displayName=(currentUser?.displayName||'').split('|')[0]||'';
@@ -1270,6 +1414,64 @@ function renderCart(){
   document.getElementById('ccon').innerHTML=h;
 }
 
+// ── Location sharing ──
+let _custLocation = null;
+
+function shareLocation(){
+  const btn = document.getElementById('locBtn');
+  const status = document.getElementById('locStatus');
+  btn.textContent = '📍 Getting your location...';
+  btn.disabled = true;
+
+  if(!navigator.geolocation){
+    status.textContent = '❌ Location not supported on this device.';
+    btn.disabled = false; btn.innerHTML = '📍 Share My Current Location';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{
+      const lat = pos.coords.latitude.toFixed(6);
+      const lng = pos.coords.longitude.toFixed(6);
+      _custLocation = { lat, lng, mapUrl: `https://maps.google.com/?q=${lat},${lng}` };
+      btn.style.background = '#e8f5e9';
+      btn.style.borderColor = '#4caf50';
+      btn.style.color = '#1b5e20';
+      btn.innerHTML = '✅ Location Shared! (tap to update)';
+      btn.disabled = false;
+      status.innerHTML = `<a href="${_custLocation.mapUrl}" target="_blank" style="color:var(--g);font-weight:700;">📌 View on Google Maps</a>`;
+      toast('✅ Location captured!');
+    },
+    (err)=>{
+      btn.disabled = false;
+      btn.innerHTML = '📍 Share My Current Location';
+      const msg = err.code===1 ? 'Location permission denied. Please allow location in browser settings.'
+                : err.code===2 ? 'Could not detect location. Try again.'
+                : 'Location timeout. Try again.';
+      status.textContent = '⚠️ '+msg;
+    },
+    { enableHighAccuracy:true, timeout:10000, maximumAge:0 }
+  );
+}
+
+// Auto-fill full address from individual fields
+function buildAddress(){
+  const house    = (document.getElementById('ckHouse')?.value||'').trim();
+  const lane     = (document.getElementById('ckLane')?.value||'').trim();
+  const landmark = (document.getElementById('ckLandmark')?.value||'').trim();
+  const area     = (document.getElementById('ckArea')?.value||'').trim();
+  const parts    = [house,lane,landmark,area].filter(Boolean);
+  const full     = parts.join(', ');
+  const ckA      = document.getElementById('ckA');
+  if(ckA) ckA.value = full;
+  return full;
+}
+
+// Auto-build address as user types
+['ckHouse','ckLane','ckLandmark','ckArea'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', buildAddress);
+});
+
 function openCk(){
   const items=cItems();
   const parts=(currentUser?.displayName||'').split('|');
@@ -1297,6 +1499,18 @@ function placeOrder(){
   if(!phone){toast('Enter your phone number');return;}
   const items=cItems();
   if(!items.length){toast('Cart is empty');return;}
+
+  // Validate address
+  const house = document.getElementById('ckHouse').value.trim();
+  const lane  = document.getElementById('ckLane').value.trim();
+  const area  = document.getElementById('ckArea').value.trim();
+  if(!house) return toast('⚠️ Enter house / flat number');
+  if(!lane)  return toast('⚠️ Enter street / lane name');
+  if(!area)  return toast('⚠️ Enter area / colony name');
+
+  const fullAddress = buildAddress();
+  const landmark    = document.getElementById('ckLandmark').value.trim();
+
   const parts=(currentUser?.displayName||'').split('|');
   const sub=cTotal();
   const pricing=getOrderTotal(sub);
@@ -1309,9 +1523,15 @@ function placeOrder(){
     total: pricing.total,
     expectedDelivery: delivTime,
     cname:document.getElementById('ckN').value.trim()||parts[0]||'Customer',
-    cphone:phone, address:document.getElementById('ckA').value.trim(),
+    cphone:phone,
+    address: fullAddress,
+    house, lane, landmark, area,
+    locationUrl: _custLocation ? _custLocation.mapUrl : '',
+    locationLat: _custLocation ? _custLocation.lat : '',
+    locationLng: _custLocation ? _custLocation.lng : '',
     uid: currentUser?.uid||'guest',
     status:'Pending (Awaiting Payment)', time:new Date().toLocaleString(), seen:false};
+  _custLocation = null; // reset for next order
 
   closeM('ckMo');
   showUPIModal(pricing.total);
