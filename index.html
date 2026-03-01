@@ -1279,41 +1279,115 @@ function updStkBtns(){
   document.getElementById('soutBtn').style.cssText=`background:${!editStk?'var(--red)':'#eee'};color:${!editStk?'#fff':'#666'};`;
 }
 function handlePhoto(e){
-  const f=e.target.files[0]; if(!f)return;
+  const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
   r.onload=ev=>{
     const img=new Image();
     img.onload=()=>{
       const canvas=document.createElement('canvas');
-      const M=400; let w=img.width,h=img.height;
-      if(w>M){h=Math.round(h*M/w);w=M;} if(h>M){w=Math.round(w*M/h);h=M;}
-      canvas.width=w;canvas.height=h;
+      // Keep max 300px so base64 stays well under Firebase 1MB limit
+      const M=300; let w=img.width, h=img.height;
+      if(w>h){ if(w>M){h=Math.round(h*M/w);w=M;} }
+      else    { if(h>M){w=Math.round(w*M/h);h=M;} }
+      canvas.width=w; canvas.height=h;
       canvas.getContext('2d').drawImage(img,0,0,w,h);
-      editImg=canvas.toDataURL('image/jpeg',.7);
+      editImg=canvas.toDataURL('image/jpeg', 0.6);
       document.getElementById('pdrop').innerHTML=`<img src="${editImg}" alt="">`;
     };
     img.src=ev.target.result;
   };
   r.readAsDataURL(f);
 }
-function saveEdit(){
-  const name=document.getElementById('ename').value.trim();
-  const price=parseFloat(document.getElementById('eprice').value);
-  if(!name||!price){toast('Fill all fields');return;}
-  const updated={id:editId,name,price,emoji:document.getElementById('eemojii').value,unit:document.getElementById('eunit').value,stock:editStk,img:editImg,cat:(vegs.find(v=>v.id===editId)||{}).cat||'Other'};
-  if(fbOn){ const{db,ref,set}=FB; set(ref(db,`vegetables/${editId}`),updated); }
-  else vegs=vegs.map(v=>v.id===editId?updated:v);
-  closeM('editMo'); toast('✅ Updated!'); renderAdmin();
+async function saveEdit(){
+  const name  = document.getElementById('ename').value.trim();
+  const price = parseFloat(document.getElementById('eprice').value);
+  const emoji = document.getElementById('eemojii').value.trim() || '🥦';
+  const unit  = document.getElementById('eunit').value;
+
+  if(!name)  return toast('⚠️ Enter vegetable name');
+  if(!price || price<=0) return toast('⚠️ Enter a valid price');
+  if(!editId) return toast('⚠️ No product selected');
+
+  // Safety: compress image further if too large (Firebase 1MB node limit)
+  let safeImg = editImg;
+  if(safeImg && safeImg.length > 200000){
+    // Re-compress to smaller size
+    try {
+      const img2 = new Image();
+      await new Promise(res=>{ img2.onload=res; img2.src=safeImg; });
+      const canvas2 = document.createElement('canvas');
+      const M2 = 200;
+      let w2=img2.width, h2=img2.height;
+      if(w2>M2){h2=Math.round(h2*M2/w2);w2=M2;}
+      if(h2>M2){w2=Math.round(w2*M2/h2);h2=M2;}
+      canvas2.width=w2; canvas2.height=h2;
+      canvas2.getContext('2d').drawImage(img2,0,0,w2,h2);
+      safeImg = canvas2.toDataURL('image/jpeg', 0.5);
+    } catch(e){ safeImg = null; } // if compression fails, skip image
+  }
+
+  const cat = (vegs.find(v=>v.id===editId)||{}).cat || 'Other';
+  const updated = { id:editId, name, price, emoji, unit, stock:editStk, img:safeImg||null, cat };
+
+  const btn = document.querySelector('#editMo .msv');
+  if(btn){ btn.disabled=true; btn.textContent='Saving...'; }
+
+  try {
+    if(fbOn){
+      const { db, ref, set } = FB;
+      await set(ref(db, `vegetables/${editId}`), updated);
+      // Also update local array so UI refreshes instantly
+      vegs = vegs.map(v => v.id===editId ? updated : v);
+    } else {
+      vegs = vegs.map(v => v.id===editId ? updated : v);
+    }
+    closeM('editMo');
+    toast('✅ Product updated!');
+    renderAdmin();
+  } catch(err){
+    console.error('saveEdit error:', err);
+    toast('❌ Save failed: ' + (err.message||err.code||'Unknown error'));
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='Save Changes'; }
+  }
 }
-function addVeg(){
-  const name=document.getElementById('aname').value.trim();
-  const price=parseFloat(document.getElementById('aprice').value);
-  if(!name||!price){toast('Fill all fields');return;}
-  const id='v'+Date.now();
-  const v={id,name,price,emoji:document.getElementById('aemoji').value||'🥦',unit:document.getElementById('aunit').value,cat:document.getElementById('acat').value,stock:true,img:null};
-  if(fbOn){ const{db,ref,set}=FB; set(ref(db,`vegetables/${id}`),v); }
-  else vegs.push(v);
-  closeM('addMo'); toast('✅ Added!'); renderAdmin();
+
+async function addVeg(){
+  const name  = document.getElementById('aname').value.trim();
+  const price = parseFloat(document.getElementById('aprice').value);
+  const emoji = document.getElementById('aemoji').value.trim() || '🥦';
+  const unit  = document.getElementById('aunit').value;
+  const cat   = document.getElementById('acat').value;
+
+  if(!name)  return toast('⚠️ Enter vegetable name');
+  if(!price||price<=0) return toast('⚠️ Enter a valid price');
+
+  const id = 'v'+Date.now();
+  const v  = { id, name, price, emoji, unit, cat, stock:true, img:null };
+
+  const btn = document.querySelector('#addMo .msv');
+  if(btn){ btn.disabled=true; btn.textContent='Adding...'; }
+
+  try {
+    if(fbOn){
+      const { db, ref, set } = FB;
+      await set(ref(db, `vegetables/${id}`), v);
+      vegs.push(v);
+    } else {
+      vegs.push(v);
+    }
+    // Clear fields
+    ['aname','aprice','aemoji'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    document.getElementById('aemoji').value='🥦';
+    closeM('addMo');
+    toast('✅ Product added!');
+    renderAdmin();
+  } catch(err){
+    console.error('addVeg error:', err);
+    toast('❌ Add failed: '+(err.message||err.code||'Unknown error'));
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='Add Vegetable'; }
+  }
 }
 
 // ── Notifs ──
