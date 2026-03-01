@@ -908,7 +908,11 @@ function showPg(id){
     const tag=document.getElementById('custNameTag');
     if(tag){
       const nm=(currentUser?.displayName||'').split('|')[0]||'';
-      tag.textContent=nm?'👤 '+nm:'';
+      if(nm){
+        const hr=new Date().getHours();
+        const greet=hr<12?'Good Morning ☀️':hr<17?'Good Afternoon 🌤️':'Good Evening 🌙';
+        tag.textContent=greet+', '+nm;
+      } else { tag.textContent=''; }
     }
   }
   if(id==='adminPage'){
@@ -1205,6 +1209,34 @@ function updCartBadge(){ const n=Object.values(cart).reduce((a,b)=>a+b,0),b=docu
 function cTotal(){ return Object.entries(cart).reduce((s,[id,q])=>{ const v=vegs.find(x=>x.id===id); return s+(v?v.price*q:0); },0); }
 function cItems(){ return Object.entries(cart).map(([id,q])=>{ const v=vegs.find(x=>x.id===id); return v?{...v,qty:q}:null; }).filter(Boolean); }
 
+// ── Pricing rules ──
+function getDeliveryCharge(subtotal){
+  return subtotal >= 200 ? 0 : 40;
+}
+function getDiscount(subtotal){
+  if(subtotal >= 1000) return { pct:7.5, label:'7.5% discount (order ≥ ₹1000)' };
+  if(subtotal >= 500)  return { pct:2.5, label:'2.5% discount (order ≥ ₹500)' };
+  return { pct:0, label:'' };
+}
+function getOrderTotal(subtotal){
+  const delivery  = getDeliveryCharge(subtotal);
+  const disc      = getDiscount(subtotal);
+  const discAmt   = Math.round(subtotal * disc.pct / 100);
+  const total     = subtotal + delivery - discAmt;
+  return { subtotal, delivery, discAmt, discPct:disc.pct, discLabel:disc.label, total };
+}
+function getDeliveryTime(){
+  const now  = new Date();
+  const hour = now.getHours() + now.getMinutes()/60;
+  if(hour < 14){
+    return 'Today by 8:00 PM 🚚';
+  } else {
+    const tmr = new Date(now); tmr.setDate(tmr.getDate()+1);
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    return days[tmr.getDay()]+' (Tomorrow) by 8:00 PM 🚚';
+  }
+}
+
 function renderCart(){
   const items=cItems();
   if(!items.length){ document.getElementById('ccon').innerHTML=`<div class="empty"><span class="big">🛒</span><p>Cart is empty</p><button onclick="cTab('shop')" style="margin-top:14px;padding:10px 22px;background:var(--g);color:#fff;border:none;border-radius:20px;cursor:pointer;font-weight:600;font-size:14px;">Start Shopping</button></div>`; return; }
@@ -1214,8 +1246,26 @@ function renderCart(){
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;"><div style="font-weight:700;color:var(--g);">₹${Math.round(i.price*i.qty)}</div>
     <div class="qrow" style="gap:6px;"><button class="qbtn qm" style="width:28px;height:28px" onclick="uCart('${i.id}',-0.5)">−</button><span style="font-weight:700;font-size:13px;min-width:40px;text-align:center">${i.qty}${i.unit}</span><button class="qbtn qp" style="width:28px;height:28px" onclick="uCart('${i.id}',0.5)">+</button></div></div></div>`;
   });
-  const tot=cTotal();
-  h+=`<div class="tbox"><div class="tr"><span>Subtotal (${items.length} items)</span><span>₹${Math.round(tot)}</span></div><div class="tr"><span>Delivery</span><span style="color:var(--g);font-weight:700;">FREE</span></div><div class="tf"><span>Total</span><span>₹${Math.round(tot)}</span></div></div>
+  const sub = cTotal();
+  const pricing = getOrderTotal(sub);
+  const delivTime = getDeliveryTime();
+  h += `<div class="tbox">
+    <div class="tr"><span>Subtotal (${items.length} items)</span><span>₹${Math.round(sub)}</span></div>
+    <div class="tr">
+      <span>Delivery</span>
+      <span style="font-weight:700;color:${pricing.delivery===0?'var(--g)':'#e53e3e'};">
+        ${pricing.delivery===0 ? 'FREE ✅' : '₹'+pricing.delivery}
+      </span>
+    </div>
+    ${pricing.delivery>0 ? `<div style="font-size:11px;color:#aaa;text-align:right;margin-top:-6px;margin-bottom:4px;">Add ₹${200-Math.round(sub)} more for free delivery</div>` : ''}
+    ${pricing.discAmt>0 ? `<div class="tr"><span style="color:#1e6b1e;">🎉 ${pricing.discLabel}</span><span style="color:#1e6b1e;font-weight:700;">−₹${pricing.discAmt}</span></div>` : ''}
+    <div class="tf"><span>Total</span><span>₹${pricing.total}</span></div>
+    <div style="margin-top:10px;background:#e8f5e9;border-radius:10px;padding:10px;font-size:12px;color:#1e6b1e;font-weight:600;text-align:center;">
+      🕗 Expected Delivery: ${delivTime}
+    </div>
+    ${sub<200 ? '<div style="font-size:11px;color:#888;text-align:center;margin-top:6px;">Free delivery on orders above ₹200</div>' : ''}
+    ${sub>=500&&sub<1000 ? '<div style="font-size:11px;color:#1e6b1e;text-align:center;margin-top:6px;">🎯 Add ₹'+(1000-Math.round(sub))+' more for 7.5% discount!</div>' : ''}
+  </div>
   <button class="ckbtn" onclick="openCk()">Proceed to Checkout →</button>`;
   document.getElementById('ccon').innerHTML=h;
 }
@@ -1223,9 +1273,18 @@ function renderCart(){
 function openCk(){
   const items=cItems();
   const parts=(currentUser?.displayName||'').split('|');
+  const sub=cTotal();
+  const pricing=getOrderTotal(sub);
+  const delivTime=getDeliveryTime();
   document.getElementById('ckItems').innerHTML=
-    items.map(i=>`<div style="display:flex;justify-content:space-between;"><span>${i.emoji} ${i.name} × ${i.qty}${i.unit}</span><span>₹${Math.round(i.price*i.qty)}</span></div>`).join('')+
-    `<div style="border-top:1px solid #eee;margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;font-weight:700;color:var(--g);"><span>Total</span><span>₹${Math.round(cTotal())}</span></div>`;
+    items.map(i=>`<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>${i.emoji} ${i.name} × ${i.qty}${i.unit}</span><span>₹${Math.round(i.price*i.qty)}</span></div>`).join('')+
+    `<div style="border-top:1px solid #eee;margin-top:8px;padding-top:8px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:#666;margin-bottom:4px;"><span>Subtotal</span><span>₹${Math.round(sub)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:#666;margin-bottom:4px;"><span>Delivery</span><span style="font-weight:700;color:${pricing.delivery===0?'var(--g)':'#e53e3e'}">${pricing.delivery===0?'FREE ✅':'₹'+pricing.delivery}</span></div>
+      ${pricing.discAmt>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#1e6b1e;margin-bottom:4px;"><span>🎉 Discount (${pricing.discPct}%)</span><span>−₹${pricing.discAmt}</span></div>`:''}
+      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;color:var(--g);margin-top:6px;padding-top:6px;border-top:1px solid #eee;"><span>Total to Pay</span><span>₹${pricing.total}</span></div>
+      <div style="background:#e8f5e9;border-radius:8px;padding:8px;margin-top:8px;font-size:12px;color:#1e6b1e;font-weight:600;text-align:center;">🕗 ${delivTime}</div>
+    </div>`;
   document.getElementById('ckN').value=parts[0]||'';
   document.getElementById('ckP').value=parts[1]||currentPhone;
   openM('ckMo');
@@ -1239,16 +1298,23 @@ function placeOrder(){
   const items=cItems();
   if(!items.length){toast('Cart is empty');return;}
   const parts=(currentUser?.displayName||'').split('|');
-  const total=cTotal();
-  _pendingOrder={id:Date.now(),items,total,
+  const sub=cTotal();
+  const pricing=getOrderTotal(sub);
+  const delivTime=getDeliveryTime();
+  _pendingOrder={id:Date.now(),items,
+    subtotal: Math.round(sub),
+    deliveryCharge: pricing.delivery,
+    discount: pricing.discAmt,
+    discountPct: pricing.discPct,
+    total: pricing.total,
+    expectedDelivery: delivTime,
     cname:document.getElementById('ckN').value.trim()||parts[0]||'Customer',
     cphone:phone, address:document.getElementById('ckA').value.trim(),
     uid: currentUser?.uid||'guest',
     status:'Pending (Awaiting Payment)', time:new Date().toLocaleString(), seen:false};
 
-  // Show UPI payment modal
   closeM('ckMo');
-  showUPIModal(total);
+  showUPIModal(pricing.total);
 }
 
 function showUPIModal(total){
@@ -1388,8 +1454,15 @@ function showInvoice(order){
     </table>
 
     <div class="totals">
-      <div class="total-row"><span>Delivery</span><span style="color:#1e6b1e;font-weight:700;">FREE</span></div>
-      <div class="total-row final"><span>Total Amount</span><span>₹${totalAmt}</span></div>
+      <div class="total-row"><span>Subtotal</span><span>₹${order.subtotal||totalAmt}</span></div>
+      <div class="total-row">
+        <span>Delivery</span>
+        <span style="font-weight:700;color:${(order.deliveryCharge||0)===0?'#1e6b1e':'#e53e3e'};">
+          ${(order.deliveryCharge||0)===0?'FREE ✅':'₹'+(order.deliveryCharge||0)}
+        </span>
+      </div>
+      ${(order.discount||0)>0?`<div class="total-row"><span style="color:#1e6b1e;">🎉 Discount (${order.discountPct||0}%)</span><span style="color:#1e6b1e;">−₹${order.discount}</span></div>`:''}
+      <div class="total-row final"><span>Total Paid</span><span>₹${totalAmt}</span></div>
     </div>
     <div class="payment-box">
       <div class="pay-icon">🅿</div>
@@ -1433,8 +1506,9 @@ function renderMyOrds(){
       </div>
       ${o.items.map(i=>`<div style="display:flex;justify-content:space-between;font-size:13px;color:#555;padding:2px 0;"><span>${i.emoji} ${i.name} × ${i.qty}${i.unit}</span><span>₹${Math.round(i.price*i.qty)}</span></div>`).join('')}
       <div style="border-top:1px solid #f0f0f0;margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;font-weight:700;color:var(--g);font-size:15px;"><span>Total</span><span>₹${Math.round(o.total)}</span></div>
-      ${o.status==='Out for Delivery'?`<div style="background:#fff8e1;border-radius:10px;padding:10px;margin-top:8px;text-align:center;font-size:13px;font-weight:600;color:#f57f17;">🚚 Your order is on the way!</div>`:''}
-      ${o.status==='Delivered'?`<div style="background:#e8f5e9;border-radius:10px;padding:10px;margin-top:8px;text-align:center;font-size:13px;font-weight:600;color:var(--g);">✅ Delivered successfully!</div>`:''}
+      ${o.expectedDelivery&&o.status!=='Delivered'&&o.status!=='Cancelled'?`<div style="background:#e8f5e9;border-radius:10px;padding:8px 12px;margin-top:8px;font-size:12px;color:#1e6b1e;font-weight:600;">🕗 Expected: ${o.expectedDelivery}</div>`:''}
+      ${o.status==='Out for Delivery'?`<div style="background:#fff8e1;border-radius:10px;padding:10px;margin-top:6px;text-align:center;font-size:13px;font-weight:600;color:#f57f17;">🚚 Your order is on the way!</div>`:''}
+      ${o.status==='Delivered'?`<div style="background:#e8f5e9;border-radius:10px;padding:10px;margin-top:6px;text-align:center;font-size:13px;font-weight:600;color:var(--g);">✅ Delivered successfully!</div>`:''}
       ${o.paymentStatus
         ? `<div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;background:#f0faf0;border-radius:10px;padding:10px 12px;">
             <div style="font-size:12px;color:#1e6b1e;font-weight:700;">💰 ${o.paymentStatus} ${o.invoiceNo?'· '+o.invoiceNo:''}</div>
